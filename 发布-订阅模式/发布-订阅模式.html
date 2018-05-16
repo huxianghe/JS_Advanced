@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        // 01-定义一个订阅-发布模式函数；
+        function Pub2Sub() {
+            // 02-订阅器；
+            this._observer = {}
+        }
+        // 03-原型对象上面添加方法；
+        Pub2Sub.prototype = {
+            constructor: Pub2Sub,
+            // 04-订阅者；
+            subscribe: function (type, callback) {
+                if (Object.prototype.toString.call(callback) !== '[object Function]') return
+                // 订阅器中是否存在订阅行为；
+                if (!this._observer[type]) this._observer[type] = []
+                this._observer[type].push(callback)
+                return this
+            },
+            // 05-发布者；
+            publish: function () {
+                let _self = this
+                // 获取发布行为
+                let type = Array.prototype.shift.call(arguments)
+                // 获取发布主题
+                let theme = Array.prototype.slice.call(arguments)
+                // 获取相关主题所有订阅者
+                let subscribes = _self._observer[type]
+                // 发布主题
+                if (!subscribes || !subscribes.length) {
+                    console.warn('unsubscribe action or no actions in observer, please check out')
+                    return
+                }
+                subscribes.forEach(callback => {
+                    callback.apply(_self, theme)
+                })
+                return _self
+            },
+            // 06-取消订阅
+            unsubscrible: function (type, callback) {
+                if (!this._observer[type] || !this._observer[type].length) return
+                let subscribes = this._observer[type]
+                subscribes.some((item, index, arr) => {
+                    if (item === callback) {
+                        arr.splice(index, 1)
+                        return true
+                    }
+                })
+                return this
+            }
+        }
+        // 实例化发布-订阅模式
+        let ps = new Pub2Sub()
+
+        // 添加订阅
+        let sub1 = function (data) {
+            console.log('sub1' + data)
+        }
+        let sub2 = function (data) {
+            console.log('sub2' + data)
+        }
+        ps.subscribe('click', sub1)
+        ps.subscribe('click', sub2)
+
+        // 实现发布、取订及再发布
+        ps.publish('click', '第一次点击消息').unsubscrible('click', sub2).publish('click', '第二次点击消息')
+        ps.publish('focus', '这是聚焦事件')
+    </script>
+</body>
+
+</html>

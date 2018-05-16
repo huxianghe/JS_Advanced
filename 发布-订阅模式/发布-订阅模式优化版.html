@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <button>查看历史记录</button>
+    <script src="./index.js"></script>
+    <script>
+        let btn = document.querySelector('button')
+        // 先发布主题；
+        Observer.publish('click', '第一次发布点击消息')
+        Observer.publish('focus', '第一次发布聚焦消息')
+        Observer.publish('blur', '第一次发布失焦消息')
+
+        // 订阅
+        let sub1 = function (data) {
+            console.log('sub1' + data)
+        }
+        let sub2 = function (data) {
+            console.log('sub2' + data)
+        }
+        let sub3 = function (data) {
+            console.log('sub3' + data)
+        }
+        Observer.subscribe('click', sub1)
+        Observer.subscribe('click', sub2)
+        Observer.subscribe('focus', sub3)
+
+        // 再发布、取订、查看发布记录
+        Observer.publish('click', '第二次发布点击消息').unsubscrible('click', sub2).publish('click', '第三次发布点击消息').publish(
+            'focus', '第二次发布聚焦消息')
+
+        // 查看历史发布
+        btn.addEventListener('click', function () {
+            Observer.viewLog('click', function (message) {
+                console.log(message)
+            })
+        })
+    </script>
+</body>
+
+</html>
