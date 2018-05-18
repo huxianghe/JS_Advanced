@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+        html,
+        body,
+        #app,
+        .wrapper {
+            height: 100%;
+        }
+        .wrapper {
+            overflow: hidden;
+        }
+        .tab {
+            position: fixed;
+            width: 100%;
+            height: 50px;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 999;
+        }
+        .tab > li {
+            float: left;
+            margin-right: 50px;
+        }
+        .list_content {
+            line-height: 200px;
+            text-align: center;
+        }
+        .list_content.home > li {
+            background: #0f0;
+        }
+        .list_content.home > li:nth-child(even) {
+            background: #0ff;
+        }
+        .list_content.list > li {
+            background: rgb(0, 255, 170);
+        }
+        .list_content.list > li:nth-child(even) {
+            background: rgb(255, 94, 0);
+        }
+        .list_content.about > li {
+            background: rgb(187, 255, 0);
+        }
+        .list_content.about > li:nth-child(even) {
+            background: rgb(119, 0, 255);
+        }
+        .current {
+            color: #f00;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <ul class="tab">
+            <li>
+                <router-link to="/" replace>首页</router-link>
+            </li>
+            <li>
+                <router-link to="/list" replace>列表</router-link>
+            </li>
+            <li>
+                <router-link to="/about" replace>关于</router-link>
+            </li>
+        </ul>
+        <router-view></router-view>
+    </div>
+    <script src="./lib/vue.js"></script>
+    <script src="./lib/vue-router.js"></script>
+    <script src="./lib/bscroll.js"></script>
+    <script>
+        // 设置组件
+        const Home = {
+            template: `
+            <div class="wrapper" ref="wrapper">
+                <ul class="list_content home">
+                    <li v-for='i in 10' @click='goList'>{{ i }}</li>
+                </ul>
+            </div>
+            `,
+            data () {
+                return {
+                }
+            },
+            mounted () {
+                this.$nextTick(() => {
+                    // 初始化 BS
+                    this._initScroll()
+                    // 滚动监听
+                    this.scroll.on('scrollEnd', (pos) => {
+                        // 将滚动信息设置给当前路由元信息
+                        this.$route.meta.y = pos.y
+                    })
+                    // 当前组件激活的时候，滚动到离开前位置
+                    // 如果你想要滚动动画效果，可以在 scrollTo 方法中自定义
+                    this.scroll.scrollTo(0, this.$route.meta.y, 0)
+                })
+            },
+            methods: {
+                _initScroll () {
+                    if (!this.$refs.wrapper) return
+                    this.scroll = new BScroll(this.$refs.wrapper, {
+                        mouseWheel: {
+                            speed: 20,
+                            invert: false,
+                            easeTime: 300
+                        },
+                        // 派发 click 事件；
+                        click: true
+                    })
+                },
+                // 跳转到列表页；
+                goList () {
+                    this.$router.push({name: 'list'})
+                }
+            }
+        }
+        const List = {
+            template: `
+            <ul class="list_content list">
+                <li v-for='i in 10' @click='goHome'>{{ i }}</li>
+            </ul>
+            `,
+            methods: {
+                // 回跳到首页
+                goHome () {
+                    this.$router.push({name: 'home'})
+                }
+            }
+        }
+        const About = {
+            template: `
+            <ul class="list_content about">
+                <li v-for='i in 10'>{{ i }}</li>
+            </ul>
+            `
+        }
+        const routes =  [
+                // 设置 meta
+                {path: '/', name: 'home', component: Home, meta: {x: 0, y: 0}},
+                {path: '/list', name: 'list', component: List, meta: {x: 0, y: 0}},
+                {path: '/about', component: About, meta: {x: 0, y: 0}}
+            ]
+        // scrollBehavior 其实这里已经没有什么作用了，因为当前组件的高度被定死和整个屏幕一样高
+        // const scrollBehavior = function (to, from, savedPosition) {
+        //     return to.meta
+        // }
+        // 设置路由
+        const router = new VueRouter({
+            routes,
+            scrollBehavior,
+            linkExactActiveClass: 'current'
+        })
+        // 挂载
+        const vm = new Vue({
+            router
+        }).$mount('#app')
+    </script>
+</body>
+
+</html>

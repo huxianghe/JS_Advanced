@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+        html,
+        body,
+        #app {
+            height: 100%;
+        }
+        .tab {
+            position: fixed;
+            width: 100%;
+            height: 50px;
+            top: 0;
+            left: 0;
+            right: 0;
+        }
+        .tab > li {
+            float: left;
+            margin-right: 50px;
+        }
+        .list_content {
+            line-height: 200px;
+            text-align: center;
+        }
+        .list_content.home > li {
+            background: #0f0;
+        }
+        .list_content.home > li:nth-child(even) {
+            background: #0ff;
+        }
+        .list_content.list > li {
+            background: rgb(0, 255, 170);
+        }
+        .list_content.list > li:nth-child(even) {
+            background: rgb(255, 94, 0);
+        }
+        .list_content.about > li {
+            background: rgb(187, 255, 0);
+        }
+        .list_content.about > li:nth-child(even) {
+            background: rgb(119, 0, 255);
+        }
+        .current {
+            color: #f00;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <ul class="tab">
+            <li>
+                <router-link to="/" replace>首页</router-link>
+            </li>
+            <li>
+                <router-link to="/list" replace>列表</router-link>
+            </li>
+            <li>
+                <router-link to="/about" replace>关于</router-link>
+            </li>
+            <li>
+                <a href="#" @click='() => { this.$router.back() }'>点击回退</a>
+            </li>
+        </ul>
+        <router-view></router-view>
+    </div>
+    <script src="./lib/vue.js"></script>
+    <script src="./lib/vue-router.js"></script>
+    <script>
+        // 设置组件
+        const Home = {
+            template: `
+            <ul class="list_content home">
+                <li v-for='i in 10'>{{ i }}</li>
+            </ul>
+            `,
+            data () {
+                return {
+                    timerId: ''
+                }
+            },
+            mounted () {
+                // 01-1-使用 addEventListener 添加监听
+                // window.addEventListener('scroll', this.justifyPos)
+                // 02-或者使用 on 方式绑定监听
+                window.onscroll = this.justifyPos
+            },
+            methods: {
+                justifyPos () {
+                    // 节流；
+                    if (this.timerId) clearTimeout(this.timerId)
+                    this.timerId = setTimeout(() => {
+                        // 获取页面滚动距离之后设置给当前路由的 元信息
+                        this.$route.meta.y = window.pageYOffset
+                    }, 300)
+                }
+            },
+            destroyed () {
+                // 01-2-当组件销毁的时候，移除滚动行为监听, 清空定时器
+                // window.removeEventListener('scroll', this.justifyPos)
+                // clearTimeout(this.timerId)
+            }
+        }
+        const List = {
+            template: `
+            <ul class="list_content list">
+                <li v-for='i in 10'>{{ i }}</li>
+            </ul>
+            `
+        }
+        const About = {
+            template: `
+            <ul class="list_content about">
+                <li v-for='i in 10'>{{ i }}</li>
+            </ul>
+            `
+        }
+        const routes =  [
+                // 设置 meta
+                {path: '/', component: Home, meta: {x: 0, y: 0}},
+                {path: '/list', component: List, meta: {x: 0, y: 0}},
+                {path: '/about', component: About, meta: {x: 0, y: 0}}
+            ]
+        // 03-01-借助 scrollBehavior，细颗粒度控制组件滚动行为
+        const scrollBehavior = function (to, from, savedPosition) {
+            return to.meta
+        }
+        // 设置路由
+        const router = new VueRouter({
+            routes,
+            scrollBehavior,
+            linkExactActiveClass: 'current'
+        })
+
+        // 03-02-借助导航守卫，让组件滚动行为一致
+        // router.beforeEach((to, from, next) => {
+        //     document.documentElement.scrollTop = 0
+        //     next()
+        // })
+
+        // 挂载
+        new Vue({
+            router,
+            data: {
+                // timerId: ''
+            },
+            // 04-01-在根实例中添加滚动监听
+            // mounted () {
+            //     window.addEventListener('scroll', this.justifyPos)
+            // },
+            methods: {
+                // justifyPos () {
+                //     // 节流；
+                //     if (this.timerId) clearTimeout(this.timerId)
+                //     this.timerId = setTimeout(() => {
+                //         this.$route.meta.y = window.pageYOffset
+                //     }, 300)
+                // }
+            }
+        }).$mount('#app')
+    </script>
+</body>
+
+</html>
